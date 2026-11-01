@@ -1,24 +1,81 @@
-# Student Task One: Centralized Academic Task & Deadline Management Platform
 
+# Student Task Management System
+
+**Project Name:** Student Task One  
 **Course Code:** MCA1005  
 **Student Name:** Shimun Joshi  
-**Institution:** Avantika University, Ujjain (School of Engineering)  
+**Institution:** Avantika University  
 
 ## Project Overview
-Student Task One is a fully dynamic, multi-user web application where **any university student or faculty member can register, log in securely, create course-tagged academic tasks, and manage workflows across an interactive Kanban board**. 
+
+Student Task Management System is a web-based application designed to help students organize and manage their academic tasks, assignments, priorities, and deadlines in one place.
+
+The application provides a dashboard where students can create tasks, track their progress, and organize work using a Kanban-style board.
+
+## Live Website
+
+[Open Student Task Management System](https://shimunjoshi.github.io/student-task-management-/)
 
 ## Features
-- **Multi-User Authentication:** Secure registration and login supporting multiple student and faculty accounts.
-- **Interactive Kanban Board:** Real-time task status tracking across *To Do*, *In Progress*, *Review*, and *Completed* columns with automated counter badges.
-- **Coursework Management:** Filter tasks by course codes (MCA1005, MCA1002, etc.), priority levels, and due dates.
-- **Robust Database & CI/CD:** Includes a 3NF normalized PostgreSQL schema (`database/schema.sql`) and automated GitHub Actions CI configuration.
 
-## Local Execution Instructions
-1. Extract this ZIP package.
-2. Open your terminal inside `server/`.
-3. Install dependencies and start the server:
-   ```bash
-   npm install
-   npm start
-   ```
-4. Open your browser and navigate to `http://localhost:5000`. Register a new student account or log in with any email to test the live multi-user dashboard!
+- Student registration and login interface
+- Personal task management
+- Create and delete academic tasks
+- Set course names and task priorities
+- Track task progress
+- Kanban board with four stages:
+  - To Do
+  - In Progress
+  - Review
+  - Completed
+- Task information saved in browser localStorage
+- Responsive and user-friendly interface
+
+## Technologies Used
+
+- HTML
+- CSS
+- JavaScript
+- Node.js and Express (backend prototype)
+- PostgreSQL schema file (database design)
+
+## Project Structure
+
+```text
+student-task-management-/
+│
+├── index.html
+├── style.css
+├── app.js
+├── server.js
+├── schema.sql
+├── package.json
+├── ci.yml
+└── README.md
+```
+
+## How to Run the Frontend Locally
+
+1. Download or clone this repository.
+2. Open the project folder in Visual Studio Code.
+3. Open `index.html` in your browser.
+4. Register an account and explore the dashboard.
+5. Create tasks and test the task management features.
+
+## Purpose of the Project
+
+The main purpose of this project is to provide students with a centralized platform to organize academic responsibilities, monitor deadlines, and improve task management.
+
+## Future Improvements
+
+- Secure backend authentication
+- Database integration
+- Email and deadline reminders
+- Improved automated testing
+- User roles and permissions
+
+## Author
+
+**Shimun Joshi**  
+Avantika University  
+MCA Programme
