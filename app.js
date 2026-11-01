@@ -2,6 +2,16 @@ let currentUser = JSON.parse(localStorage.getItem('student_task_user')) || null;
 let currentAuthToken = localStorage.getItem('student_task_token') || null;
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Check if "Remember Me" saved credentials exist and pre-fill them
+    const savedEmail = localStorage.getItem('student_task_remembered_email');
+    const savedPass = localStorage.getItem('student_task_remembered_pass');
+    if (savedEmail && document.getElementById('loginEmail')) {
+        document.getElementById('loginEmail').value = savedEmail;
+        document.getElementById('loginPassword').value = savedPass || '';
+        const rememberCheckbox = document.getElementById('rememberMe');
+        if (rememberCheckbox) rememberCheckbox.checked = true;
+    }
+
     if (currentUser && currentAuthToken) {
         showDashboard();
     } else {
@@ -28,25 +38,61 @@ function switchTab(tab) {
     }
 }
 
-async function handleLogin(e) {
-    e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-
-    currentUser = { id: 'user-' + email.replace(/[^a-zA-Z0-9]/g, ''), fullName: email.split('@')[0], email, role: 'STUDENT' };
-    currentAuthToken = 'token-' + currentUser.id;
-    localStorage.setItem('student_task_user', JSON.stringify(currentUser));
-    localStorage.setItem('student_task_token', currentAuthToken);
-    showDashboard();
-}
-
-async function handleRegister(e) {
+// REGISTER: Saves user accounts securely in localStorage
+function handleRegister(e) {
     e.preventDefault();
     const fullName = document.getElementById('regFullName').value;
-    const email = document.getElementById('regEmail').value;
+    const email = document.getElementById('regEmail').value.trim().toLowerCase();
+    const password = document.getElementById('regPassword').value;
+
+    let registeredUsers = JSON.parse(localStorage.getItem('student_task_registered_users')) || [];
     
-    alert('Registration successful for ' + fullName + '! Please log in.');
+    const existingUser = registeredUsers.find(u => u.email === email);
+    if (existingUser) {
+        alert('This email is already registered! Please log in instead.');
+        switchTab('login');
+        return;
+    }
+
+    registeredUsers.push({ fullName, email, password });
+    localStorage.setItem('student_task_registered_users', JSON.stringify(registeredUsers));
+
+    alert('Registration successful! You can now log in with your credentials.');
+    document.getElementById('registerForm').reset();
     switchTab('login');
+}
+
+// LOGIN: Validates credentials and remembers them if checked
+function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+    const password = document.getElementById('loginPassword').value;
+    const rememberMe = document.getElementById('rememberMe') ? document.getElementById('rememberMe').checked : false;
+
+    let registeredUsers = JSON.parse(localStorage.getItem('student_task_registered_users')) || [];
+    const validUser = registeredUsers.find(u => u.email === email && u.password === password);
+
+    if (!validUser) {
+        alert('Invalid email or password! Please check your credentials or register first.');
+        return;
+    }
+
+    // Handle Remember Me storage
+    if (rememberMe) {
+        localStorage.setItem('student_task_remembered_email', email);
+        localStorage.setItem('student_task_remembered_pass', password);
+    } else {
+        localStorage.removeItem('student_task_remembered_email');
+        localStorage.removeItem('student_task_remembered_pass');
+    }
+
+    currentUser = { id: 'user-' + email.replace(/[^a-zA-Z0-9]/g, ''), fullName: validUser.fullName, email: validUser.email };
+    currentAuthToken = 'token-' + currentUser.id;
+
+    localStorage.setItem('student_task_user', JSON.stringify(currentUser));
+    localStorage.setItem('student_task_token', currentAuthToken);
+
+    showDashboard();
 }
 
 function handleLogout() {
