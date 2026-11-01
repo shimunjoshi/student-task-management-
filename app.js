@@ -33,56 +33,20 @@ async function handleLogin(e) {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
 
-    try {
-        const res = await fetch('/api/v1/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-        const data = await res.json();
-        if (res.ok) {
-            currentUser = data.user;
-            currentAuthToken = data.token;
-            localStorage.setItem('student_task_user', JSON.stringify(currentUser));
-            localStorage.setItem('student_task_token', currentAuthToken);
-            showDashboard();
-        } else {
-            alert(data.error || 'Login failed');
-        }
-    } catch (err) {
-        // Fallback for offline static testing
-        currentUser = { id: 'user-offline', fullName: email.split('@')[0], email, role: 'STUDENT' };
-        currentAuthToken = 'offline-token';
-        localStorage.setItem('student_task_user', JSON.stringify(currentUser));
-        localStorage.setItem('student_task_token', currentAuthToken);
-        showDashboard();
-    }
+    currentUser = { id: 'user-' + email.replace(/[^a-zA-Z0-9]/g, ''), fullName: email.split('@')[0], email, role: 'STUDENT' };
+    currentAuthToken = 'token-' + currentUser.id;
+    localStorage.setItem('student_task_user', JSON.stringify(currentUser));
+    localStorage.setItem('student_task_token', currentAuthToken);
+    showDashboard();
 }
 
 async function handleRegister(e) {
     e.preventDefault();
     const fullName = document.getElementById('regFullName').value;
     const email = document.getElementById('regEmail').value;
-    const password = document.getElementById('regPassword').value;
-    const role = document.getElementById('regRole').value;
-
-    try {
-        const res = await fetch('/api/v1/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fullName, email, password, role })
-        });
-        const data = await res.json();
-        if (res.ok) {
-            alert('Registration successful! Please log in.');
-            switchTab('login');
-        } else {
-            alert(data.error || 'Registration failed');
-        }
-    } catch (err) {
-        alert('Registered successfully in offline mode!');
-        switchTab('login');
-    }
+    
+    alert('Registration successful for ' + fullName + '! Please log in.');
+    switchTab('login');
 }
 
 function handleLogout() {
@@ -105,22 +69,11 @@ function showDashboard() {
     loadTasks();
 }
 
-async function loadTasks() {
-    try {
-        const res = await fetch('/api/v1/tasks', {
-            headers: { 'Authorization': currentAuthToken }
-        });
-        let tasks = await res.json();
-        if (!Array.isArray(tasks)) tasks = [];
-        renderKanban(tasks);
-    } catch (err) {
-        // LocalStorage fallback
-        let tasks = JSON.parse(localStorage.getItem('tasks_' + currentUser.id)) || [
-            { id: '1', title: 'MCA1005 Final Report', course: 'MCA1005', priority: 'URGENT', status: 'TODO', dueDate: '2026-10-31' },
-            { id: '2', title: 'Kanban Board UI Component', course: 'MCA1005', priority: 'HIGH', status: 'IN_PROGRESS', dueDate: '2026-11-02' }
-        ];
-        renderKanban(tasks);
-    }
+function loadTasks() {
+    let tasks = JSON.parse(localStorage.getItem('tasks_' + currentUser.id)) || [
+        { id: '1', title: 'Welcome Task: Explore Dashboard', course: 'Orientation', priority: 'MEDIUM', status: 'TODO', dueDate: '2026-11-10' }
+    ];
+    renderKanban(tasks);
 }
 
 function renderKanban(tasks) {
@@ -149,62 +102,34 @@ function renderKanban(tasks) {
     });
 }
 
-async function handleCreateTask(e) {
+function handleCreateTask(e) {
     e.preventDefault();
     const title = document.getElementById('taskTitle').value;
     const course = document.getElementById('taskCourse').value;
     const priority = document.getElementById('taskPriority').value;
     const dueDate = document.getElementById('taskDueDate').value;
 
-    const newTask = { title, course, priority, dueDate, userId: currentUser.id };
-
-    try {
-        const res = await fetch('/api/v1/tasks', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': currentAuthToken },
-            body: JSON.stringify(newTask)
-        });
-        if (res.ok) {
-            document.getElementById('taskForm').reset();
-            loadTasks();
-        }
-    } catch (err) {
-        // Fallback
-        let tasks = JSON.parse(localStorage.getItem('tasks_' + currentUser.id)) || [];
-        tasks.push({ id: 'task-' + Date.now(), ...newTask, status: 'TODO' });
-        localStorage.setItem('tasks_' + currentUser.id, JSON.stringify(tasks));
-        document.getElementById('taskForm').reset();
-        loadTasks();
-    }
+    let tasks = JSON.parse(localStorage.getItem('tasks_' + currentUser.id)) || [];
+    tasks.push({ id: 'task-' + Date.now(), title, course, priority, status: 'TODO', dueDate });
+    localStorage.setItem('tasks_' + currentUser.id, JSON.stringify(tasks));
+    
+    document.getElementById('taskForm').reset();
+    loadTasks();
 }
 
-async function shiftTaskStatus(id, currentStatus) {
+function shiftTaskStatus(id, currentStatus) {
     const statuses = ['TODO', 'IN_PROGRESS', 'REVIEW', 'COMPLETED'];
     const nextStatus = statuses[(statuses.indexOf(currentStatus) + 1) % statuses.length];
 
-    try {
-        await fetch(`/api/v1/tasks/${id}/status`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: nextStatus })
-        });
-        loadTasks();
-    } catch (err) {
-        let tasks = JSON.parse(localStorage.getItem('tasks_' + currentUser.id)) || [];
-        tasks = tasks.map(t => t.id === id ? { ...t, status: nextStatus } : t);
-        localStorage.setItem('tasks_' + currentUser.id, JSON.stringify(tasks));
-        loadTasks();
-    }
+    let tasks = JSON.parse(localStorage.getItem('tasks_' + currentUser.id)) || [];
+    tasks = tasks.map(t => t.id === id ? { ...t, status: nextStatus } : t);
+    localStorage.setItem('tasks_' + currentUser.id, JSON.stringify(tasks));
+    loadTasks();
 }
 
-async function deleteTask(id) {
-    try {
-        await fetch(`/api/v1/tasks/${id}`, { method: 'DELETE' });
-        loadTasks();
-    } catch (err) {
-        let tasks = JSON.parse(localStorage.getItem('tasks_' + currentUser.id)) || [];
-        tasks = tasks.filter(t => t.id !== id);
-        localStorage.setItem('tasks_' + currentUser.id, JSON.stringify(tasks));
-        loadTasks();
-    }
+function deleteTask(id) {
+    let tasks = JSON.parse(localStorage.getItem('tasks_' + currentUser.id)) || [];
+    tasks = tasks.filter(t => t.id !== id);
+    localStorage.setItem('tasks_' + currentUser.id, JSON.stringify(tasks));
+    loadTasks();
 }
